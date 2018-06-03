@@ -40,7 +40,7 @@ def make_phones(digits, first_number):
         if tlen == 7:
             phone = '8495' + phone
         elif tlen == 10:
-            phone = phone + '8'
+            phone = '8' + phone
         else:
             phone = re.sub('^7','8',phone)
         result.append(phone)
