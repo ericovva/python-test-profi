@@ -1,6 +1,5 @@
 #!/usr/bin/python
 #-*- coding: utf-8 -*-
-import sys
 import re
 
 def parse(input_str):
@@ -16,6 +15,7 @@ def parse(input_str):
     input_digits = [ ]
     was_plus = False
     first_number = False
+    info = ''
     for char in input_str:
         if char.isdigit():
             if char == '7' and was_plus:
@@ -26,13 +26,14 @@ def parse(input_str):
         elif char == '+':
             was_plus = True
             continue
+        else:
+            info += char
         was_plus = False
 
     final.extend(make_phones(input_digits, first_number))
-    return final
+    return (final, info)
 
 def make_phones(digits, first_number):
-    print(digits)
     result = []
     def make_it(tlen, digits):
         phone = ''.join(digits[:tlen])
@@ -94,6 +95,6 @@ def count_value(value, terms):
             break
 
     return saved
-st = "-3440987--+7---9--1----5----294----03---75-------89152940375-------9263394039----"
-print(st)
-print(parse(st))
+#st = "-3440987--+7---9--1----5----294----03---75-------89152940375-------9263394039----"
+#print(st)
+#print(parse(st))

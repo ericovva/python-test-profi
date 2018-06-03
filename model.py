@@ -2,46 +2,63 @@ import sqlite3
 
 class Client:
     
-    def __init__(self, phone, info = None):
-        self.id = phone
+    def __init__(self, phone, info = None, created = None):
+        self.phone = phone
         self.info = info
+        self.created = created
+
+    def dump(self):
+        print(self.phone, self.info, self.created)
 
     @classmethod
     def create_table(cls):
         conn = sqlite3.connect('base.sql')
         cursor = conn.cursor()
         cursor.execute(
-            "CREATE TABLE clients(\
-                id str not null,\
-                info str,\
-                PRIMARY KEY (id)\
-            )"
+            'CREATE TABLE clients(\
+                id INTEGER PRIMARY KEY AUTOINCREMENT,\
+                phone STRING not null,\
+                info STRING,\
+                created TIMESTAMP DEFAULT CURRENT_TIMESTAMP\
+            );'
         )
-    
+        cursor.execute('CREATE INDEX phone_idx ON clients (phone);')
+        cursor.close()
+
     @classmethod
-    def select_by_id(cls, id):
+    def select_by_phone(cls, phones):
         conn = sqlite3.connect('base.sql')
-        scalar = False if isinstance(id, list) else True
+        scalar = False if isinstance(phones, list) else True
         result = []
         if scalar:
-            id = [ id ]
-        if not len(id):
+            phones = [ phones ]
+        if not len(phones):
             return result
-
-        with  conn.cursor() as cursor:
-            in_list = ','.join( list(map (lambda i: '%s', id)) )
-            cursor.execute('SELECT from client WHER id IN (%s)' % in_list, id)
-            result = list(map lambda item: Client(item[0], item[1]), cursor.fetchall())
+        cursor = conn.cursor()
+        in_list = ','.join( list(map (lambda i: i, phones)) )
+        cursor.execute('SELECT phone, info, created from clients WHERE phone IN (%s) order by created' % in_list)
+        result = list(map( lambda item: Client(item[0], item[1], item[2]), cursor.fetchall()))
+        cursor.close()
         
         return result
-    
-    def insert(self):
+
+    @classmethod
+    def insert(cls, obj):
         conn = sqlite3.connect('base.sql')
+        cursor = conn.cursor()
+        scalar = False if isinstance(obj, list) else True
+        if scalar:
+            obj = [ obj ]
 
-        with  conn.cursor() as cursor:
-            cursor.execute('INSERT INTO clients )
-            result = list(map lambda item: Client(item[0], item[1]), cursor.fetchall())
-        
-        return result
+        try:
+            value_str = ','.join( list(map (lambda o: "({}, '{}')".format(o.phone, o.info or ''), obj)))
+            cursor.execute('INSERT INTO clients (phone, info) VALUES %s' % value_str)
+            cursor.close()
+        except Exception as e:
+            print(e)
+            return False
+
+        conn.commit()
+        return True
         
 
